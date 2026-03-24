@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Systematic.Forex | Private Quantitative Research</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-void: #030304;
+            --bg-panel: #0a0b0f;
+            --bg-card: #0e1015;
+            --glow-primary: #00f0b5;
+            --glow-secondary: #0077ff;
+            --glow-warm: #f0c040;
+            --text-bright: #eef1f6;
+            --text-body: #b0b8c8;
+            --text-muted: #505868;
+            --border: #1a1d28;
+            --border-hover: #2a2f3d;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg-void);
+            color: var(--text-bright);
+            line-height: 1.7;
+            overflow-x: hidden;
+        }
+
+        /* ═══ MATRIX RAIN ═══ */
+        #matrixCanvas {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+            opacity: 0.35;
+        }
+
+        .content-wrapper { position: relative; z-index: 1; }
+
+        /* ═══ HEADER ═══ */
+        header {
+            padding: 5rem 2rem 4rem;
+            text-align: center;
+            position: relative;
+        }
+
+        header::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 10%;
+            right: 10%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--border), transparent);
+        }
+
+        /* Floating scanline */
+        .scanline {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--glow-primary), transparent);
+            opacity: 0.4;
+            animation: scanDown 8s ease-in-out infinite;
+        }
+
+        @keyframes scanDown {
+            0%, 100% { top: 0; opacity: 0; }
+            10% { opacity: 0.4; }
+            90% { opacity: 0.4; }
+            100% { top: 100%; opacity: 0; }
+        }
+
+        .logo-mark {
+            font-family: 'Syne', sans-serif;
+            font-weight: 800;
+            font-size: clamp(2.8rem, 6vw, 5rem);
+            letter-spacing: -3px;
+            text-transform: uppercase;
+            margin-bottom: 0.3rem;
+        }
+
+        .logo-mark .dot {
+            color: var(--glow-primary);
+            text-shadow: 0 0 30px rgba(0,240,181,0.5), 0 0 60px rgba(0,240,181,0.2);
+            position: relative;
+        }
+
+        .logo-mark .forex {
+            color: transparent;
+            -webkit-text-stroke: 1.5px var(--glow-primary);
+            filter: drop-shadow(0 0 15px rgba(0,240,181,0.25));
+        }
+
+        .tagline {
+            font-family: 'DM Sans', sans-serif;
+            font-weight: 300;
+            font-size: 1.15rem;
+            color: var(--text-body);
+            letter-spacing: 2px;
+            font-style: italic;
+            margin-top: 0.5rem;
+        }
+
+        /* ═══ OPERATIONAL STATUS BAR ═══ */
+        .status-bar {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 2rem;
+            padding: 1rem 2rem;
+            background: linear-gradient(90deg, transparent, rgba(0,240,181,0.03), transparent);
+            border-bottom: 1px solid var(--border);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            flex-wrap: wrap;
+        }
+
+        .status-dot {
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--glow-primary);
+            box-shadow: 0 0 8px var(--glow-primary);
+            margin-right: 6px;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; box-shadow: 0 0 8px var(--glow-primary); }
+            50% { opacity: 0.5; box-shadow: 0 0 3px var(--glow-primary); }
+        }
+
+        .status-value { color: var(--glow-primary); }
+
+        /* ═══ MANDATE ═══ */
+        .mandate {
+            max-width: 820px;
+            margin: 3rem auto;
+            padding: 2.5rem 3rem;
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-left: 3px solid var(--glow-primary);
+            position: relative;
+        }
+
+        .mandate::before {
+            content: '//';
+            position: absolute;
+            top: -12px;
+            left: 20px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            background: var(--bg-void);
+            padding: 0 8px;
+            letter-spacing: 2px;
+        }
+
+        .mandate p {
+            font-size: 1.05rem;
+            color: var(--text-body);
+            text-align: center;
+            line-height: 1.9;
+        }
+
+        .mandate .hl { color: var(--glow-primary); font-weight: 600; }
+
+        /* ═══ TERMINAL LOG ═══ */
+        .terminal-section {
+            max-width: 900px;
+            margin: 3rem auto 4rem;
+            padding: 0 2rem;
+        }
+
+        .terminal {
+            background: #060810;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+        }
+
+        .terminal-bar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 16px;
+            background: #0c0e16;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .terminal-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .terminal-dot.r { background: #ff5f57; }
+        .terminal-dot.y { background: #febc2e; }
+        .terminal-dot.g { background: #28c840; }
+
+        .terminal-title {
+            margin-left: 8px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            letter-spacing: 1px;
+        }
+
+        .terminal-body {
+            padding: 1.5rem 2rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            line-height: 2;
+            min-height: 200px;
+        }
+
+        .terminal-body .line {
+            opacity: 0;
+            animation: typeIn 0.3s ease forwards;
+        }
+
+        @keyframes typeIn {
+            from { opacity: 0; transform: translateY(4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .t-time { color: var(--text-muted); }
+        .t-ok { color: var(--glow-primary); }
+        .t-warn { color: var(--glow-warm); }
+        .t-label { color: #6080a0; }
+        .t-val { color: var(--text-bright); }
+        .t-cmd { color: var(--glow-primary); }
+
+        .cursor-blink {
+            display: inline-block;
+            width: 8px;
+            height: 14px;
+            background: var(--glow-primary);
+            animation: blink 1s step-end infinite;
+            vertical-align: middle;
+            margin-left: 4px;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        /* ═══ STATS ═══ */
+        .stats-row {
+            display: flex;
+            justify-content: center;
+            gap: 0;
+            max-width: 900px;
+            margin: 0 auto 4rem;
+            padding: 0 2rem;
+        }
+
+        .stat-block {
+            flex: 1;
+            text-align: center;
+            padding: 2.5rem 1.5rem;
+            border: 1px solid var(--border);
+            border-right: none;
+            background: var(--bg-panel);
+            transition: background 0.3s ease;
+        }
+
+        .stat-block:first-child { border-radius: 8px 0 0 8px; }
+        .stat-block:last-child { border-radius: 0 8px 8px 0; border-right: 1px solid var(--border); }
+
+        .stat-block:hover { background: var(--bg-card); }
+
+        .stat-num {
+            font-family: 'Syne', sans-serif;
+            font-weight: 800;
+            font-size: clamp(2rem, 4vw, 3.2rem);
+            color: var(--glow-primary);
+            line-height: 1;
+        }
+
+        .stat-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            margin-top: 0.8rem;
+        }
+
+        /* ═══ SECTION TITLES ═══ */
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .section-head {
+            text-align: center;
+            margin-bottom: 3.5rem;
+        }
+
+        .section-head h2 {
+            font-family: 'Syne', sans-serif;
+            font-weight: 700;
+            font-size: clamp(1.8rem, 3vw, 2.5rem);
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, var(--glow-primary), var(--glow-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .section-head p {
+            color: var(--text-body);
+            font-size: 1.05rem;
+            max-width: 680px;
+            margin: 0 auto;
+        }
+
+        /* ═══ CARDS ═══ */
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(310px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 5rem;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 2.5rem;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--glow-primary), var(--glow-secondary));
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at 50% 0%, rgba(0,240,181,0.04) 0%, transparent 60%);
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            pointer-events: none;
+        }
+
+        .card:hover {
+            transform: translateY(-6px);
+            border-color: var(--border-hover);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+        }
+
+        .card:hover::before { opacity: 1; }
+        .card:hover::after { opacity: 1; }
+
+        .card-num {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            letter-spacing: 3px;
+            margin-bottom: 1rem;
+        }
+
+        .card h3 {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: var(--text-bright);
+        }
+
+        .card p {
+            color: var(--text-body);
+            font-size: 0.92rem;
+            line-height: 1.7;
+        }
+
+        .tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .tag {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.65rem;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            padding: 0.4rem 0.9rem;
+            border: 1px solid rgba(0,240,181,0.2);
+            color: var(--glow-primary);
+            border-radius: 3px;
+            background: rgba(0,240,181,0.05);
+        }
+
+        /* ═══ EQUITY CURVE SVG ═══ */
+        .equity-section {
+            max-width: 900px;
+            margin: 0 auto 5rem;
+            padding: 2.5rem;
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+        }
+
+        .equity-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 1.5rem;
+        }
+
+        .equity-svg {
+            width: 100%;
+            height: 160px;
+        }
+
+        .equity-line {
+            stroke: var(--glow-primary);
+            stroke-width: 2;
+            fill: none;
+            stroke-dasharray: 800;
+            stroke-dashoffset: 800;
+            animation: drawLine 3s ease forwards;
+        }
+
+        .equity-fill {
+            fill: url(#equityGrad);
+            opacity: 0;
+            animation: fadeIn 1s ease 2.5s forwards;
+        }
+
+        @keyframes drawLine {
+            to { stroke-dashoffset: 0; }
+        }
+
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+
+        /* ═══ CONTACT ═══ */
+        .contact-section {
+            max-width: 580px;
+            margin: 0 auto 5rem;
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 3rem;
+        }
+
+        .contact-section h3 {
+            font-family: 'Syne', sans-serif;
+            font-weight: 700;
+            font-size: 1.8rem;
+            text-align: center;
+            margin-bottom: 0.3rem;
+        }
+
+        .contact-sub {
+            text-align: center;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 2rem;
+        }
+
+        .form-group { margin-bottom: 1.3rem; }
+
+        .form-group label {
+            display: block;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.85rem 1rem;
+            background: var(--bg-void);
+            border: 1px solid var(--border);
+            color: var(--text-bright);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.95rem;
+            border-radius: 4px;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+            -webkit-appearance: none;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--glow-primary);
+            box-shadow: 0 0 0 3px rgba(0,240,181,0.08);
+        }
+
+        select.form-input {
+            cursor: pointer;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23505868' fill='none' stroke-width='1.5'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+        }
+
+        textarea.form-input { resize: vertical; min-height: 110px; }
+
+        .submit-btn {
+            width: 100%;
+            padding: 1rem;
+            background: var(--glow-primary);
+            color: var(--bg-void);
+            border: none;
+            border-radius: 4px;
+            font-family: 'Syne', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,240,181,0.25);
+        }
+
+        .submit-btn:active { transform: translateY(0); }
+
+        /* ═══ DISCLAIMER ═══ */
+        .disclaimer {
+            border-top: 1px solid var(--border);
+            padding: 4rem 2rem 2rem;
+        }
+
+        .disclaimer-inner {
+            max-width: 1000px;
+            margin: 0 auto;
+            columns: 2;
+            column-gap: 3rem;
+            color: #3a3f4d;
+            font-size: 0.7rem;
+            line-height: 1.6;
+        }
+
+        .disclaimer-inner strong { color: #52586a; }
+        .disclaimer-inner p { margin-bottom: 1rem; break-inside: avoid; }
+
+        footer {
+            text-align: center;
+            padding: 2rem;
+            color: #2a2f3d;
+            font-size: 0.75rem;
+            font-family: 'JetBrains Mono', monospace;
+            letter-spacing: 1px;
+        }
+
+        /* ═══ RESPONSIVE ═══ */
+        @media (max-width: 768px) {
+            .stats-row { flex-direction: column; gap: 0; }
+            .stat-block { border-right: 1px solid var(--border); border-bottom: none; }
+            .stat-block:first-child { border-radius: 8px 8px 0 0; }
+            .stat-block:last-child { border-radius: 0 0 8px 8px; border-bottom: 1px solid var(--border); }
+            .status-bar { gap: 1rem; font-size: 0.65rem; }
+            .mandate { padding: 2rem; margin: 2rem 1rem; }
+            .disclaimer-inner { columns: 1; }
+            .terminal-body { padding: 1rem; font-size: 0.7rem; }
+        }
+
+        /* ═══ SCROLL REVEAL ═══ */
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        .reveal.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body>
+
+<canvas id="matrixCanvas"></canvas>
+
+<div class="content-wrapper">
+
+    <!-- ═══ HEADER ═══ -->
+    <header>
+        <div class="scanline"></div>
+        <div class="logo-mark">
+            Systematic<span class="dot">.</span><span class="forex">Forex</span>
+        </div>
+        <p class="tagline">"A game for thoroughbreds, not sprinters."</p>
+    </header>
+
+    <!-- ═══ STATUS BAR ═══ -->
+    <div class="status-bar">
+        <span><span class="status-dot"></span> Systems <span class="status-value">OPERATIONAL</span></span>
+        <span>Models Active: <span class="status-value">5</span></span>
+        <span>Feed Latency: <span class="status-value">2.3ms</span></span>
+        <span>Stress Test: <span class="status-value">PASS</span></span>
+    </div>
+
+    <!-- ═══ MANDATE ═══ -->
+    <div class="mandate reveal">
+        <p>Systematic.Forex is a <span class="hl">private quantitative research firm</span>. We manage proprietary capital and deploy internally developed algorithmic models. To maintain our operational focus, we do not distribute retail software or offer advisory services.</p>
+    </div>
+
+    <!-- ═══ TERMINAL ═══ -->
+    <div class="terminal-section reveal">
+        <div class="terminal">
+            <div class="terminal-bar">
+                <div class="terminal-dot r"></div>
+                <div class="terminal-dot y"></div>
+                <div class="terminal-dot g"></div>
+                <span class="terminal-title">systematic.forex — execution_log</span>
+            </div>
+            <div class="terminal-body" id="terminalBody">
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ STATS ═══ -->
+    <div class="stats-row reveal">
+        <div class="stat-block">
+            <div class="stat-num">5</div>
+            <div class="stat-label">Core Models</div>
+        </div>
+        <div class="stat-block">
+            <div class="stat-num">15</div>
+            <div class="stat-label">Years R&D</div>
+        </div>
+        <div class="stat-block">
+            <div class="stat-num">0%</div>
+            <div class="stat-label">Look-Ahead Bias</div>
+        </div>
+        <div class="stat-block">
+            <div class="stat-num">24/7</div>
+            <div class="stat-label">Autonomous</div>
+        </div>
+    </div>
+
+    <!-- ═══ ARCHITECTURE SECTION ═══ -->
+    <div class="container">
+        <div class="section-head reveal">
+            <h2>Institutional Architecture</h2>
+            <p>Fifteen years of market data distilled into pure mathematical execution. Forex majors, minors, and global indices — built natively in MQL5.</p>
+        </div>
+
+        <div class="card-grid">
+            <div class="card reveal">
+                <div class="card-num">001</div>
+                <h3>Portfolio Edge</h3>
+                <p>A single strategy is a vulnerability. We deploy a balanced portfolio of strictly independent, non-correlated Expert Advisors. Multi-strategy smooths the equity curve and absorbs regime shifts.</p>
+                <div class="tags">
+                    <span class="tag">Risk Parity</span>
+                    <span class="tag">Multi-Strategy</span>
+                </div>
+            </div>
+
+            <div class="card reveal">
+                <div class="card-num">002</div>
+                <h3>Execution Safety</h3>
+                <p>Brilliant math is useless if it violates server limits. Our architecture is engineered to be invisible — lean execution, strict slippage controls, mandatory cooldown protocols. Zero hyperactivity.</p>
+                <div class="tags">
+                    <span class="tag">MQL5 Native</span>
+                    <span class="tag">Server Compliant</span>
+                </div>
+            </div>
+
+            <div class="card reveal">
+                <div class="card-num">003</div>
+                <h3>Statistical Brutality</h3>
+                <p>Net profit is a byproduct of surviving drawdown. We evaluate using Maximum Adverse Excursion and Monte Carlo stress tests. If an EA requires excessive unrealized pain to win, the code is scrapped.</p>
+                <div class="tags">
+                    <span class="tag">MAE/MFE</span>
+                    <span class="tag">Monte Carlo</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══ EQUITY CURVE ═══ -->
+        <div class="equity-section reveal">
+            <div class="equity-label">Portfolio Equity — Composite Model Performance</div>
+            <svg class="equity-svg" viewBox="0 0 800 160" preserveAspectRatio="none">
+                <defs>
+                    <linearGradient id="equityGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stop-color="rgba(0,240,181,0.15)" />
+                        <stop offset="100%" stop-color="rgba(0,240,181,0)" />
+                    </linearGradient>
+                </defs>
+                <path class="equity-fill" d="M0,140 L30,135 80,130 120,125 160,128 200,118 250,115 300,108 340,112 380,100 420,95 460,88 500,92 540,78 580,72 620,65 660,58 700,50 740,42 780,35 800,28 L800,160 L0,160 Z" />
+                <path class="equity-line" d="M0,140 L30,135 80,130 120,125 160,128 200,118 250,115 300,108 340,112 380,100 420,95 460,88 500,92 540,78 580,72 620,65 660,58 700,50 740,42 780,35 800,28" />
+                <!-- Small dots at key points -->
+                <circle cx="160" cy="128" r="3" fill="var(--glow-primary)" opacity="0.6" />
+                <circle cx="340" cy="112" r="3" fill="var(--glow-primary)" opacity="0.6" />
+                <circle cx="500" cy="92" r="3" fill="var(--glow-primary)" opacity="0.6" />
+                <circle cx="800" cy="28" r="3" fill="var(--glow-primary)" opacity="0.8" />
+            </svg>
+        </div>
+
+        <!-- ═══ CONTACT ═══ -->
+        <div class="contact-section reveal">
+            <h3>Get In Touch</h3>
+            <div class="contact-sub">We read every message</div>
+
+            <form action="YOUR_ENDPOINT_HERE" method="POST">
+                <input type="text" name="_honey" style="display:none" tabindex="-1" autocomplete="off">
+
+                <div class="form-group">
+                    <label for="name">Name</label>
+                    <input type="text" id="name" name="name" class="form-input" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" class="form-input" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="subject">What brings you here?</label>
+                    <select id="subject" name="subject" class="form-input" required>
+                        <option value="">Select...</option>
+                        <option value="General Enquiry">General Enquiry</option>
+                        <option value="B2B / Partnership">B2B / Partnership</option>
+                        <option value="Research Collaboration">Research Collaboration</option>
+                        <option value="Just Saying Hello">Just Saying Hello</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="message">Message</label>
+                    <textarea id="message" name="message" class="form-input" placeholder="What's on your mind..." required></textarea>
+                </div>
+
+                <button type="submit" class="submit-btn">Send Message</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ═══ DISCLAIMER ═══ -->
+    <div class="disclaimer">
+        <div class="disclaimer-inner">
+            <p><strong>RISK WARNING:</strong> Trading foreign exchange on margin carries a high level of risk and may not be suitable for all investors. The high degree of leverage can work against you as well as for you. Before deciding to trade foreign exchange, you should carefully consider your investment objectives, level of experience, and risk appetite. The possibility exists that you could sustain a loss of some or all of your initial investment and therefore you should not invest money that you cannot afford to lose.</p>
+
+            <p><strong>NO INVESTMENT ADVICE:</strong> The content on this website is provided for informational purposes only and does not constitute investment advice, financial advice, trading advice, or any other sort of advice. Systematic.Forex does not recommend that any financial instrument should be bought, sold, or held by you. Nothing on this website should be taken as an offer or solicitation to buy or sell any financial instrument. Past performance is not indicative of future results.</p>
+
+            <p><strong>HYPOTHETICAL PERFORMANCE:</strong> Hypothetical or simulated performance results have certain limitations. Unlike an actual performance record, simulated results do not represent actual trading. Also, since the trades have not been executed, the results may have under-or-over compensated for the impact, if any, of certain market factors, such as lack of liquidity. No representation is being made that any account will or is likely to achieve profit or losses similar to those shown.</p>
+        </div>
+    </div>
+
+    <footer>
+        &copy; 2026 Systematic.Forex — All rights reserved — Not affiliated with any brokers or retail prop firms
+    </footer>
+
+</div>
+
+<script>
+// ═══ MATRIX RAIN ═══
+(function() {
+    const canvas = document.getElementById('matrixCanvas');
+    const ctx = canvas.getContext('2d');
+
+    function resize() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    // Characters: digits, some math symbols, katakana-inspired
+    const chars = '0123456789ABCDEFabcdef.:%#+~<>=|{}[]()$&@!?*^';
+    const charArr = chars.split('');
+    const fontSize = 14;
+    const columns = Math.floor(canvas.width / fontSize);
+
+    // Each column gets a y position (drop position)
+    const drops = new Array(columns).fill(0);
+
+    // Randomise starting positions so it doesn't all start from top
+    for (let i = 0; i < drops.length; i++) {
+        drops[i] = Math.random() * -100;
+    }
+
+    // Speed variation per column
+    const speeds = new Array(columns).fill(0);
+    for (let i = 0; i < speeds.length; i++) {
+        speeds[i] = 0.3 + Math.random() * 0.7;
+    }
+
+    function draw() {
+        // Semi-transparent black to create fade trail
+        ctx.fillStyle = 'rgba(3, 3, 4, 0.06)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        for (let i = 0; i < drops.length; i++) {
+            const char = charArr[Math.floor(Math.random() * charArr.length)];
+            const x = i * fontSize;
+            const y = drops[i] * fontSize;
+
+            // Head character: bright green
+            if (y > 0 && y < canvas.height) {
+                // Glow for the leading character
+                ctx.shadowColor = 'rgba(0, 240, 181, 0.8)';
+                ctx.shadowBlur = 8;
+                ctx.fillStyle = '#00f0b5';
+                ctx.font = fontSize + 'px monospace';
+                ctx.fillText(char, x, y);
+
+                // Trail characters: dimmer
+                ctx.shadowBlur = 0;
+                const trailChar = charArr[Math.floor(Math.random() * charArr.length)];
+                ctx.fillStyle = 'rgba(0, 240, 181, 0.15)';
+                if (y - fontSize * 2 > 0)
+                    ctx.fillText(trailChar, x, y - fontSize * 2);
+                ctx.fillStyle = 'rgba(0, 240, 181, 0.08)';
+                if (y - fontSize * 5 > 0)
+                    ctx.fillText(trailChar, x, y - fontSize * 5);
+            }
+
+            drops[i] += speeds[i];
+
+            // Reset when off screen, with random delay
+            if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                drops[i] = Math.random() * -20;
+                speeds[i] = 0.3 + Math.random() * 0.7;
+            }
+        }
+        requestAnimationFrame(draw);
+    }
+
+    draw();
+})();
+// ═══ TERMINAL ANIMATION ═══
+const lines = [
+    { text: '<span class="t-time">[09:31:04]</span> <span class="t-ok">INIT</span> <span class="t-label">Loading model registry...</span>' },
+    { text: '<span class="t-time">[09:31:04]</span> <span class="t-ok">OK</span>   <span class="t-label">MODEL_01:</span> <span class="t-val">SIGMA_FADE</span> — 8 slots armed' },
+    { text: '<span class="t-time">[09:31:05]</span> <span class="t-ok">OK</span>   <span class="t-label">MODEL_02:</span> <span class="t-val">SESSION_DRIFT</span> — 3 pairs active' },
+    { text: '<span class="t-time">[09:31:05]</span> <span class="t-ok">OK</span>   <span class="t-label">MODEL_03:</span> <span class="t-val">REGIME_ANCHOR</span> — 16 pairs scanning' },
+    { text: '<span class="t-time">[09:31:05]</span> <span class="t-ok">OK</span>   <span class="t-label">MODEL_04:</span> <span class="t-val">WIRE_CASCADE</span> — overnight window pending' },
+    { text: '<span class="t-time">[09:31:06]</span> <span class="t-ok">OK</span>   <span class="t-label">MODEL_05:</span> <span class="t-val">EVENT_PULSE</span> — next trigger Apr 4' },
+    { text: '<span class="t-time">[09:31:06]</span> <span class="t-ok">PASS</span> <span class="t-label">Monte Carlo stress:</span> <span class="t-val">10,000 iterations — survival 99.7%</span>' },
+    { text: '<span class="t-time">[09:31:06]</span> <span class="t-ok">PASS</span> <span class="t-label">Look-ahead audit:</span> <span class="t-val">ZERO violations detected</span>' },
+    { text: '<span class="t-time">[09:31:07]</span> <span class="t-warn">LIVE</span> <span class="t-label">Execution mode:</span> <span class="t-val">ARMED — 5 models active</span>' },
+    { text: '<span class="t-time">[09:31:07]</span> <span class="t-cmd">&gt;</span> <span class="t-val">INITIATE_LIVE_EXECUTION</span><span class="cursor-blink"></span>' },
+];
+
+const termBody = document.getElementById('terminalBody');
+let lineIndex = 0;
+
+function addLine() {
+    if (lineIndex >= lines.length) return;
+    const div = document.createElement('div');
+    div.className = 'line';
+    div.style.animationDelay = '0s';
+    div.innerHTML = lines[lineIndex].text;
+    termBody.appendChild(div);
+    lineIndex++;
+    if (lineIndex < lines.length) {
+        setTimeout(addLine, 280 + Math.random() * 180);
+    }
+}
+
+// Start terminal after 1s
+setTimeout(addLine, 1000);
+
+// ═══ SCROLL REVEAL ═══
+const reveals = document.querySelectorAll('.reveal');
+const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+        if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
+        }
+    });
+}, { threshold: 0.15 });
+
+reveals.forEach(el => observer.observe(el));
+</script>
+
+</body>
+</html>
